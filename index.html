@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #333;
+  }
+
+  input {
+    padding: 8px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  button {
+    padding: 8px 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #0056b3;
+  }
+
+  ul {
+    margin-top: 20px;
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    background: white;
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+</style>
+  <title>Productos</title>
+</head>
+<body>
+  <h1>Gestión de Productos</h1>
+
+  <input id="name" placeholder="Nombre">
+  <input id="price" placeholder="Precio">
+  <input id="category" placeholder="Categoría">
+  <button onclick="addProduct()">Agregar</button>
+
+  <ul id="list"></ul>
+
+<script>
+async function loadProducts(){
+  const res = await fetch('http://localhost:3000/products');
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+  list.innerHTML = "";
+
+  data.forEach(p => {
+    list.innerHTML += `
+      <li>
+        ${p.name} - $${p.price} (${p.category})
+        <button onclick="deleteProduct('${p._id}')">Eliminar</button>
+      </li>
+    `;
+  });
+}
+
+async function addProduct(){
+  const name = document.getElementById('name').value;
+  const price = document.getElementById('price').value;
+  const category = document.getElementById('category').value;
+
+  await fetch('http://localhost:3000/products', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name, price, category })
+  });
+
+  loadProducts();
+}
+
+async function deleteProduct(id){
+  await fetch(`http://localhost:3000/products/${id}`, {
+    method: 'DELETE'
+  });
+
+  loadProducts();
+}
+
+loadProducts();
+</script>
+</body>
+</html>
