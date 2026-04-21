@@ -1,25 +1,29 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
-const path = require('path');
-app.use(express.static(__dirname));
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-//  Conexión MongoDB
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://CARLOS:car05mar05@parcial.kmgrjvb.mongodb.net/testdb?retryWrites=true&w=majority";
+//  Variable de entorno (Railway)
+const MONGO_URI = process.env.MONGO_URI;
 
+if (!MONGO_URI) {
+  console.error(" Falta MONGO_URI");
+  process.exit(1);
+}
+
+// Conexión a MongoDB
 mongoose.connect(MONGO_URI)
-.then(() => {
-  console.log(" MongoDB conectado");
-})
-.catch(err => {
-  console.error(" Error de conexión:", err);
-});
+.then(() => console.log("✅ MongoDB conectado"))
+.catch(err => console.error(" Error MongoDB:", err));
 
-//  Schema de productos (SOLO UNA VEZ)
+// Schema
 const ProductSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: Number,
@@ -29,7 +33,7 @@ const ProductSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", ProductSchema);
 
-//  Rutas
+// Rutas
 
 // Obtener productos
 app.get('/products', async (req, res) => {
@@ -39,9 +43,17 @@ app.get('/products', async (req, res) => {
 
 // Crear producto
 app.post('/products', async (req, res) => {
-  const product = new Product(req.body);
-  await product.save();
-  res.json(product);
+  try {
+    console.log(" Recibido:", req.body);
+
+    const product = new Product(req.body);
+    await product.save();
+
+    res.json(product);
+  } catch (error) {
+    console.error(" Error guardando:", error);
+    res.status(500).json({ error: "Error al guardar" });
+  }
 });
 
 // Eliminar producto
@@ -50,6 +62,6 @@ app.delete('/products/:id', async (req, res) => {
   res.json({ message: "Producto eliminado" });
 });
 
-//  Servidor
+// Servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor en puerto " + PORT));
+app.listen(PORT, () => console.log(" Servidor en puerto " + PORT));
