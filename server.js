@@ -10,18 +10,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-//  Variable de entorno (Railway)
+// Variable de entorno
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error(" Falta MONGO_URI");
+  console.error("Falta la variable MONGO_URI");
   process.exit(1);
 }
 
-// Conexión a MongoDB
+// Conexión MongoDB
 mongoose.connect(MONGO_URI)
-.then(() => console.log("✅ MongoDB conectado"))
-.catch(err => console.error(" Error MongoDB:", err));
+.then(() => console.log("MongoDB conectado"))
+.catch(err => console.error("Error de conexión:", err));
 
 // Schema
 const ProductSchema = new mongoose.Schema({
@@ -33,8 +33,6 @@ const ProductSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", ProductSchema);
 
-// Rutas
-
 // Obtener productos
 app.get('/products', async (req, res) => {
   const products = await Product.find();
@@ -44,15 +42,25 @@ app.get('/products', async (req, res) => {
 // Crear producto
 app.post('/products', async (req, res) => {
   try {
-    console.log(" Recibido:", req.body);
-
     const product = new Product(req.body);
     await product.save();
-
     res.json(product);
   } catch (error) {
-    console.error(" Error guardando:", error);
     res.status(500).json({ error: "Error al guardar" });
+  }
+});
+
+// Actualizar producto
+app.put('/products/:id', async (req, res) => {
+  try {
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: "Error al actualizar" });
   }
 });
 
@@ -64,4 +72,4 @@ app.delete('/products/:id', async (req, res) => {
 
 // Servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(" Servidor en puerto " + PORT));
+app.listen(PORT, () => console.log("Servidor en puerto " + PORT));

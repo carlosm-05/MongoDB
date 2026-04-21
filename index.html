@@ -35,66 +35,82 @@
 <input id="name" placeholder="Nombre">
 <input id="price" placeholder="Precio">
 <input id="category" placeholder="Categoría">
-<button onclick="addProduct()">Agregar</button>
+<button onclick="saveProduct()">Guardar</button>
 
 <ul id="list"></ul>
 
 <script>
-// 🔥 IMPORTANTE: ya no usa localhost
 const API = window.location.origin;
+
+let editId = null;
 
 // Cargar productos
 async function loadProducts(){
-  try {
-    const res = await fetch(`${API}/products`);
-    const data = await res.json();
+  const res = await fetch(`${API}/products`);
+  const data = await res.json();
 
-    const list = document.getElementById('list');
-    list.innerHTML = "";
+  const list = document.getElementById('list');
+  list.innerHTML = "";
 
-    data.forEach(p => {
-      list.innerHTML += `
-        <li>
-          ${p.name} - $${p.price} (${p.category})
-          <button onclick="deleteProduct('${p._id}')">Eliminar</button>
-        </li>
-      `;
-    });
-  } catch (error) {
-    console.error("Error cargando productos:", error);
-  }
+  data.forEach(p => {
+    list.innerHTML += `
+      <li>
+        ${p.name} - $${p.price} (${p.category})
+        <button onclick="editProduct('${p._id}', '${p.name}', '${p.price}', '${p.category}')">Editar</button>
+        <button onclick="deleteProduct('${p._id}')">Eliminar</button>
+      </li>
+    `;
+  });
 }
 
-// Agregar producto
-async function addProduct(){
+// Guardar (crear o actualizar)
+async function saveProduct(){
   const name = document.getElementById('name').value;
   const price = document.getElementById('price').value;
   const category = document.getElementById('category').value;
 
-  try {
+  if (editId) {
+    await fetch(`${API}/products/${editId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, price, category })
+    });
+
+    editId = null;
+  } else {
     await fetch(`${API}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, price, category })
     });
-
-    loadProducts();
-  } catch (error) {
-    console.error("Error agregando:", error);
   }
+
+  clearForm();
+  loadProducts();
 }
 
-// Eliminar producto
-async function deleteProduct(id){
-  try {
-    await fetch(`${API}/products/${id}`, {
-      method: 'DELETE'
-    });
+// Preparar edición
+function editProduct(id, name, price, category){
+  document.getElementById('name').value = name;
+  document.getElementById('price').value = price;
+  document.getElementById('category').value = category;
+  editId = id;
+}
 
-    loadProducts();
-  } catch (error) {
-    console.error("Error eliminando:", error);
-  }
+// Eliminar
+async function deleteProduct(id){
+  await fetch(`${API}/products/${id}`, {
+    method: 'DELETE'
+  });
+
+  loadProducts();
+}
+
+// Limpiar formulario
+function clearForm(){
+  document.getElementById('name').value = "";
+  document.getElementById('price').value = "";
+  document.getElementById('category').value = "";
 }
 
 // Inicial
