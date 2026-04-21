@@ -70,6 +70,7 @@ const API = window.location.origin;
 
 let editId = null;
 
+// Cargar productos
 async function loadProducts(){
   try {
     const res = await fetch(`${API}/products`);
@@ -100,10 +101,26 @@ async function loadProducts(){
   }
 }
 
+// Guardar producto
 async function saveProduct(){
-  const name = document.getElementById('name').value;
-  const price = document.getElementById('price').value;
-  const category = document.getElementById('category').value;
+  const name = document.getElementById('name').value.trim();
+  const price = parseFloat(document.getElementById('price').value);
+  const category = document.getElementById('category').value.trim();
+
+  if (!name) {
+    alert("El nombre es obligatorio");
+    return;
+  }
+
+  if (isNaN(price) || price < 0) {
+    alert("El precio debe ser un número positivo");
+    return;
+  }
+
+  if (!category) {
+    alert("La categoría es obligatoria");
+    return;
+  }
 
   if (editId) {
     await fetch(`${API}/products/${editId}`, {
@@ -124,6 +141,7 @@ async function saveProduct(){
   loadProducts();
 }
 
+// Editar producto
 function editProduct(id, name, price, category){
   document.getElementById('name').value = name;
   document.getElementById('price').value = price;
@@ -131,20 +149,22 @@ function editProduct(id, name, price, category){
   editId = id;
 }
 
+// Eliminar producto
 async function deleteProduct(id){
   await fetch(`${API}/products/${id}`, {
     method: 'DELETE'
   });
-
   loadProducts();
 }
 
+// Limpiar formulario
 function clearForm(){
   document.getElementById('name').value = "";
   document.getElementById('price').value = "";
   document.getElementById('category').value = "";
 }
 
+// Inicial
 loadProducts();
 </script>
 
