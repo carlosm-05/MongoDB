@@ -65,7 +65,7 @@
 
 <ul id="list"></ul>
 
-<script>
+<<script>
 const API = window.location.origin;
 
 let editId = null;
@@ -78,6 +78,7 @@ async function loadProducts(){
 
     if (!Array.isArray(data)) {
       console.error("Respuesta inválida:", data);
+      alert("Error al cargar productos");
       return;
     }
 
@@ -97,16 +98,18 @@ async function loadProducts(){
     });
 
   } catch (error) {
-    console.error("Error cargando productos:", error);
+    console.error(error);
+    alert("Error de conexión al cargar productos");
   }
 }
 
-// Guardar producto
+// Guardar (crear o actualizar)
 async function saveProduct(){
   const name = document.getElementById('name').value.trim();
   const price = parseFloat(document.getElementById('price').value);
   const category = document.getElementById('category').value.trim();
 
+  // Validaciones
   if (!name) {
     alert("El nombre es obligatorio");
     return;
@@ -122,23 +125,40 @@ async function saveProduct(){
     return;
   }
 
-  if (editId) {
-    await fetch(`${API}/products/${editId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, price, category })
-    });
-    editId = null;
-  } else {
-    await fetch(`${API}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, price, category })
-    });
-  }
+  try {
+    let res;
 
-  clearForm();
-  loadProducts();
+    if (editId) {
+      res = await fetch(`${API}/products/${editId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, category })
+      });
+      editId = null;
+    } else {
+      res = await fetch(`${API}/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, category })
+      });
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Error al guardar el producto");
+      return;
+    }
+
+    alert("Producto guardado correctamente");
+
+    clearForm();
+    loadProducts();
+
+  } catch (error) {
+    console.error(error);
+    alert("Error de conexión con el servidor");
+  }
 }
 
 // Editar producto
@@ -151,10 +171,23 @@ function editProduct(id, name, price, category){
 
 // Eliminar producto
 async function deleteProduct(id){
-  await fetch(`${API}/products/${id}`, {
-    method: 'DELETE'
-  });
-  loadProducts();
+  try {
+    const res = await fetch(`${API}/products/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (!res.ok) {
+      alert("Error al eliminar el producto");
+      return;
+    }
+
+    alert("Producto eliminado correctamente");
+    loadProducts();
+
+  } catch (error) {
+    console.error(error);
+    alert("Error de conexión al eliminar");
+  }
 }
 
 // Limpiar formulario
@@ -167,6 +200,5 @@ function clearForm(){
 // Inicial
 loadProducts();
 </script>
-
 </body>
 </html>
