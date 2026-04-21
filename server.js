@@ -23,51 +23,89 @@ mongoose.connect(MONGO_URI)
 .then(() => console.log("MongoDB conectado"))
 .catch(err => console.error("Error de conexión:", err));
 
-// Schema
+// Schema con validaciones
 const ProductSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  price: Number,
-  category: String,
-  createdAt: { type: Date, default: Date.now }
+  name: { 
+    type: String, 
+    required: true 
+  },
+  price: { 
+    type: Number, 
+    required: true,
+    min: 0
+  },
+  category: { 
+    type: String, 
+    required: true 
+  },
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  }
 });
 
 const Product = mongoose.model("Product", ProductSchema);
 
-// Rutas API
+// Obtener productos
 app.get('/products', async (req, res) => {
   const products = await Product.find();
   res.json(products);
 });
 
+// Crear producto
 app.post('/products', async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const { name, price, category } = req.body;
+
+    if (!name || price == null || !category) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    if (price < 0) {
+      return res.status(400).json({ error: "Precio inválido" });
+    }
+
+    const product = new Product({ name, price, category });
     await product.save();
+
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: "Error al guardar" });
   }
 });
 
+// Actualizar producto
 app.put('/products/:id', async (req, res) => {
   try {
+    const { name, price, category } = req.body;
+
+    if (!name || price == null || !category) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    if (price < 0) {
+      return res.status(400).json({ error: "Precio inválido" });
+    }
+
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { name, price, category },
       { new: true }
     );
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: "Error al actualizar" });
   }
 });
 
+// Eliminar producto
 app.delete('/products/:id', async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
   res.json({ message: "Producto eliminado" });
 });
 
-// IMPORTANTE: ruta raíz para evitar "Cannot GET /"
+// Ruta raíz
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
