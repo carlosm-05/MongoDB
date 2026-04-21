@@ -33,13 +33,12 @@ const ProductSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", ProductSchema);
 
-// Obtener productos
+// Rutas API
 app.get('/products', async (req, res) => {
   const products = await Product.find();
   res.json(products);
 });
 
-// Crear producto
 app.post('/products', async (req, res) => {
   try {
     const product = new Product(req.body);
@@ -50,7 +49,6 @@ app.post('/products', async (req, res) => {
   }
 });
 
-// Actualizar producto
 app.put('/products/:id', async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(
@@ -64,10 +62,14 @@ app.put('/products/:id', async (req, res) => {
   }
 });
 
-// Eliminar producto
 app.delete('/products/:id', async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
   res.json({ message: "Producto eliminado" });
+});
+
+// IMPORTANTE: ruta raíz para evitar "Cannot GET /"
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Servidor

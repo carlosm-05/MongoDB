@@ -2,31 +2,6 @@
 <html>
 <head>
   <title>Productos</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f6f8;
-      padding: 20px;
-    }
-
-    input {
-      padding: 8px;
-      margin: 5px;
-    }
-
-    button {
-      padding: 8px;
-      margin: 5px;
-      cursor: pointer;
-    }
-
-    li {
-      background: white;
-      margin: 8px 0;
-      padding: 10px;
-      border-radius: 8px;
-    }
-  </style>
 </head>
 <body>
 
@@ -63,7 +38,7 @@ async function loadProducts(){
   });
 }
 
-// Guardar (crear o actualizar)
+// Crear o actualizar
 async function saveProduct(){
   const name = document.getElementById('name').value;
   const price = document.getElementById('price').value;
@@ -75,7 +50,6 @@ async function saveProduct(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, price, category })
     });
-
     editId = null;
   } else {
     await fetch(`${API}/products`, {
@@ -89,7 +63,7 @@ async function saveProduct(){
   loadProducts();
 }
 
-// Preparar edición
+// Editar
 function editProduct(id, name, price, category){
   document.getElementById('name').value = name;
   document.getElementById('price').value = price;
@@ -102,11 +76,10 @@ async function deleteProduct(id){
   await fetch(`${API}/products/${id}`, {
     method: 'DELETE'
   });
-
   loadProducts();
 }
 
-// Limpiar formulario
+// Limpiar
 function clearForm(){
   document.getElementById('name').value = "";
   document.getElementById('price').value = "";
